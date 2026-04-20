@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>রাফিউল রূপম | 3D সোশ্যাল হাব</title>
+    <!-- Google Fonts & Font Awesome 6 -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none; /* slight polish, but links remain clickable */
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            color: #ffffff;
+            background-color: #050b1a;
+        }
+
+        /* 3D Canvas Background */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            display: block;
+        }
+
+        /* Main Content Overlay */
+        .content {
+            position: relative;
+            z-index: 10;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 1.5rem 4rem;
+            backdrop-filter: blur(2px);
+        }
+
+        /* Header Section with 3D Glow */
+        .hero {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #FFFFFF, #A5F0FF, #FFB6F0);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+            text-shadow: 0 0 20px rgba(0,255,255,0.3);
+        }
+
+        .hero .bangla-tag {
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-top: 0.75rem;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(8px);
+            display: inline-block;
+            padding: 0.4rem 1.2rem;
+            border-radius: 40px;
+            letter-spacing: 0.5px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .hero p {
+            margin-top: 1rem;
+            font-size: 1rem;
+            opacity: 0.9;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            color: #e0e0ff;
+        }
+
+        /* 3D Card Grid */
+        .links-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.8rem;
+            max-width: 1300px;
+            margin: 0 auto;
+            perspective: 1200px;
+        }
+
+        /* 3D Card Styles */
+        .social-card {
+            background: rgba(15, 25, 45, 0.65);
+            backdrop-filter: blur(12px);
+            border-radius: 2rem;
+            width: 280px;
+            padding: 1.5rem 1rem 1.8rem;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.4);
+            transform-style: preserve-3d;
+            transform: translateZ(0) rotateX(0deg) rotateY(0deg);
+            will-change: transform;
+            text-decoration: none;
+            color: white;
+            display: block;
+        }
+
+        /* 3D Hover Effect: tilt + lift */
+        .social-card:hover {
+            transform: translateY(-12px) rotateX(5deg) rotateY(5deg) scale(1.02);
+            background: rgba(25, 40, 65, 0.85);
+            border-color: rgba(255,255,255,0.5);
+            box-shadow: 0 30px 45px -12px rgba(0,0,0,0.5), 0 0 15px rgba(0,255,255,0.3);
+            transition: 0.25s;
+        }
+
+        /* Icon Circle with 3D depth */
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.2rem;
+            font-size: 2.8rem;
+            transition: 0.2s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.25);
+        }
+
+        .social-card:hover .icon-circle {
+            transform: scale(1.05);
+            background: rgba(0,0,0,0.6);
+            box-shadow: 0 0 18px currentColor;
+        }
+
+        /* Brand Colors on Hover */
+        .social-card[data-brand="facebook"]:hover .icon-circle { color: #1877f2; text-shadow: 0 0 8px #1877f2; border-color: #1877f2; }
+        .social-card[data-brand="instagram"]:hover .icon-circle { color: #e4405f; text-shadow: 0 0 8px #e4405f; border-color: #e4405f; }
+        .social-card[data-brand="twitter"]:hover .icon-circle { color: #1da1f2; text-shadow: 0 0 8px #1da1f2; border-color: #1da1f2; }
+        .social-card[data-brand="tiktok"]:hover .icon-circle { color: #00f2ea; text-shadow: 0 0 8px #00f2ea; border-color: #00f2ea; }
+        .social-card[data-brand="linkedin"]:hover .icon-circle { color: #0a66c2; text-shadow: 0 0 8px #0a66c2; border-color: #0a66c2; }
+        .social-card[data-brand="pinterest"]:hover .icon-circle { color: #e60023; text-shadow: 0 0 8px #e60023; border-color: #e60023; }
+
+        .social-card h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.3px;
+        }
+
+        .username {
+            font-size: 0.85rem;
+            font-family: monospace;
+            opacity: 0.8;
+            background: rgba(0,0,0,0.4);
+            display: inline-block;
+            padding: 0.2rem 0.8rem;
+            border-radius: 20px;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        /* Footer */
+        .footer-note {
+            margin-top: 4rem;
+            font-size: 0.85rem;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(5px);
+            padding: 0.5rem 1.2rem;
+            border-radius: 50px;
+            text-align: center;
+            color: #ccc;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 680px) {
+            .links-grid {
+                gap: 1.2rem;
+            }
+            .social-card {
+                width: 260px;
+                padding: 1.2rem 0.8rem 1.5rem;
+            }
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            .icon-circle {
+                width: 65px;
+                height: 65px;
+                font-size: 2.2rem;
+            }
+        }
+
+        @media (max-width: 580px) {
+            .social-card {
+                width: 85%;
+                max-width: 300px;
+            }
+        }
+
+        /* subtle text selection */
+        ::selection {
+            background: #00a6ff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Canvas container -->
+    <div id="canvas-container"></div>
+
+    <!-- Main UI content -->
+    <div class="content">
+        <div class="hero">
+            <h1>রাফিউল রূপম</h1>
+            <div class="bangla-tag">
+                <i class="fas fa-globe-asia"></i> আমার এই সাইটে অ্যাকাউন্ট আছে
+            </div>
+            <p>সোশ্যাল প্ল্যাটফর্মগুলোতে সরাসরি সংযুক্ত হোন | 3D অভিজ্ঞতা</p>
+        </div>
+
+        <div class="links-grid">
+            <!-- Facebook -->
+            <a href="https://www.facebook.com/profile.php?id=61574862845580" target="_blank" rel="noopener noreferrer" class="social-card" data-brand="facebook">
+                <div class="icon-circle"><i class="fab fa-facebook-f"></i></div>
+                <h3>Facebook</h3>
+                <div class="username">@রাফিউল রূপম</div>
+            </a>
+
+            <!-- Instagram -->
+            <a href="https://www.instagram.com/md.rafiulrupam/" target="_blank" rel="noopener noreferrer" class="social-card" data-brand="instagram">
+                <div class="icon-circle"><i class="fab fa-instagram"></i></div>
+                <h3>Instagram</h3>
+                <div class="username">@md.rafiulrupam</div>
+            </a>
+
+            <!-- Twitter / X -->
+            <a href="https://x.com/rafiul_rup34054" target="_blank" rel="noopener noreferrer" class="social-card" data-brand="twitter">
+                <div class="icon-circle"><i class="fab fa-twitter"></i></div>
+                <h3>X (Twitter)</h3>
+                <div class="username">@rafiul_rup34054</div>
+            </a>
+
+            <!-- TikTok -->
+            <a href="https://www.tiktok.com/@itsmerupamhere" target="_blank" rel="noopener noreferrer" class="social-card" data-brand="tiktok">
+                <div class="icon-circle"><i class="fab fa-tiktok"></i></div>
+                <h3>TikTok</h3>
+                <div class="username">@itsmerupamhere</div>
+            </a>
+
+            <!-- LinkedIn (as per given URL) -->
+            <a href="https://www.linkedin.com/feed/" target="_blank" rel="noopener noreferrer" class="social-card" data-brand="linkedin">
+                <div class="icon-circle"><i class="fab fa-linkedin-in"></i></div>
+                <h3>LinkedIn</h3>
+                <div class="username">LinkedIn Feed</div>
+            </a>
+
+            <!-- Pinterest -->
+            <a href="https://www.pinterest.com/mdrafiulislamrupom/" target="_blank" rel="noopener noreferrer" class="social-card" data-brand="pinterest">
+                <div class="icon-circle"><i class="fab fa-pinterest-p"></i></div>
+                <h3>Pinterest</h3>
+                <div class="username">mdrafiulislamrupom</div>
+            </a>
+        </div>
+
+        <div class="footer-note">
+            <i class="fas fa-mouse-pointer"></i> যেকোনো কার্ডে ক্লিক করলেই সরাসরি অ্যাকাউন্টে যাবে | 3D ডিজাইন
+        </div>
+    </div>
+
+    <!-- Three.js library -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+
+        // --- setup scene, camera, renderer for 3D background ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050b1a);
+        scene.fog = new THREE.FogExp2(0x050b1a, 0.008); // subtle fog for depth
+
+        // camera: perspective
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 2, 12);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true; // enhance depth
+        container.appendChild(renderer.domElement);
+
+        // --- Lights: dynamic atmosphere ---
+        // Ambient light
+        const ambientLight = new THREE.AmbientLight(0x222222);
+        scene.add(ambientLight);
+        
+        // Main directional light
+        const mainLight = new THREE.DirectionalLight(0xffffff, 1);
+        mainLight.position.set(3, 5, 2);
+        mainLight.castShadow = true;
+        scene.add(mainLight);
+        
+        // Fill light from below / colorful back
+        const backLight = new THREE.PointLight(0x4466ff, 0.6);
+        backLight.position.set(0, 3, -5);
+        scene.add(backLight);
+        
+        // colorful moving lights for dynamic 3D feel
+        const colorLight1 = new THREE.PointLight(0xff44aa, 0.5);
+        colorLight1.position.set(2, 1, 3);
+        scene.add(colorLight1);
+        
+        const colorLight2 = new THREE.PointLight(0x44ffaa, 0.5);
+        colorLight2.position.set(-2, 1.5, 4);
+        scene.add(colorLight2);
+        
+        // --- Central 3D Object: Modern Torus Knot with glow material ---
+        const knotGeometry = new THREE.TorusKnotGeometry(1.2, 0.32, 200, 32, 3, 4);
+        const knotMaterial = new THREE.MeshStandardMaterial({
+            color: 0x3a86ff,
+            emissive: 0x0a2350,
+            roughness: 0.3,
+            metalness: 0.7,
+            emissiveIntensity: 0.6
+        });
+        const torusKnot = new THREE.Mesh(knotGeometry, knotMaterial);
+        torusKnot.castShadow = true;
+        torusKnot.receiveShadow = false;
+        scene.add(torusKnot);
+        
+        // Add a glowing wireframe sphere around knot for extra 3D
+        const wireframeSphere = new THREE.Mesh(
+            new THREE.SphereGeometry(1.8, 24, 18),
+            new THREE.MeshBasicMaterial({ color: 0x33aaff, wireframe: true, transparent: true, opacity: 0.12 })
+        );
+        scene.add(wireframeSphere);
+        
+        // Floating particles system (star-like)
+        const particlesCount = 1800;
+        const particlesGeometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particlesCount * 3);
+        for (let i = 0; i < particlesCount; i++) {
+            // spherical distribution within radius 12-25 units
+            const radius = 8 + Math.random() * 14;
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos(2 * Math.random() - 1);
+            positions[i*3] = radius * Math.sin(phi) * Math.cos(theta);
+            positions[i*3+1] = radius * Math.sin(phi) * Math.sin(theta) * 0.8; // flatten slightly
+            positions[i*3+2] = radius * Math.cos(phi);
+        }
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const particlesMaterial = new THREE.PointsMaterial({
+            color: 0x88aaff,
+            size: 0.08,
+            transparent: true,
+            opacity: 0.6,
+            blending: THREE.AdditiveBlending
+        });
+        const particleSystem = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particleSystem);
+        
+        // secondary tiny sparkles around center
+        const dustCount = 800;
+        const dustGeo = new THREE.BufferGeometry();
+        const dustPos = [];
+        for (let i = 0; i < dustCount; i++) {
+            dustPos.push((Math.random() - 0.5) * 12);
+            dustPos.push((Math.random() - 0.5) * 8);
+            dustPos.push((Math.random() - 0.5) * 10 - 2);
+        }
+        dustGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(dustPos), 3));
+        const dustMat = new THREE.PointsMaterial({ color: 0xffcc88, size: 0.04, transparent: true, blending: THREE.AdditiveBlending });
+        const dustParticles = new THREE.Points(dustGeo, dustMat);
+        scene.add(dustParticles);
+        
+        // additional rotating ring (simple)
+        const ringGeo = new THREE.TorusGeometry(1.6, 0.05, 64, 200);
+        const ringMat = new THREE.MeshStandardMaterial({ color: 0x44bbff, emissive: 0x1166aa, emissiveIntensity: 0.4 });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = Math.PI / 2;
+        scene.add(ring);
+        
+        // floating small cubes / abstract shapes for depth
+        const shapesGroup = [];
+        const colorsArray = [0xff66cc, 0x66ffcc, 0xffaa44, 0x44aaff];
+        for (let i = 0; i < 45; i++) {
+            const size = 0.05 + Math.random() * 0.08;
+            const geometry = Math.random() > 0.5 ? new THREE.BoxGeometry(size, size, size) : new THREE.IcosahedronGeometry(size * 0.9, 0);
+            const material = new THREE.MeshStandardMaterial({ color: colorsArray[Math.floor(Math.random() * colorsArray.length)], emissive: 0x222222 });
+            const mesh = new THREE.Mesh(geometry, material);
+            const rad = 2.2 + Math.random() * 2.5;
+            const angle = Math.random() * Math.PI * 2;
+            const height = (Math.random() - 0.5) * 3;
+            mesh.position.x = Math.cos(angle) * rad;
+            mesh.position.z = Math.sin(angle) * rad;
+            mesh.position.y = height;
+            mesh.userData = { speed: 0.003 + Math.random() * 0.008, angle: angle, radius: rad, yOffset: height, angleSpeed: (Math.random() - 0.5) * 0.01 };
+            scene.add(mesh);
+            shapesGroup.push(mesh);
+        }
+        
+        // Animation variables
+        let time = 0;
+        
+        // Mouse movement effect for subtle camera parallax
+        let mouseX = 0;
+        let mouseY = 0;
+        let targetCameraX = 0;
+        let targetCameraY = 0;
+        
+        window.addEventListener('mousemove', (event) => {
+            // normalize coordinates -1 to 1
+            mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+            mouseY = (event.clientY / window.innerHeight) * 2 - 1;
+            targetCameraX = mouseX * 0.3;
+            targetCameraY = mouseY * 0.15;
+        });
+        
+        // Animation loop with smooth updates
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.012;
+            
+            // Rotate main torus knot + ring
+            torusKnot.rotation.x = Math.sin(time * 0.2) * 0.2;
+            torusKnot.rotation.y = time * 0.35;
+            torusKnot.rotation.z = Math.cos(time * 0.17) * 0.1;
+            
+            wireframeSphere.rotation.x = time * 0.1;
+            wireframeSphere.rotation.y = time * 0.2;
+            
+            ring.rotation.z = time * 0.2;
+            ring.rotation.y = time * 0.15;
+            
+            // particle system rotates slowly
+            particleSystem.rotation.y = time * 0.03;
+            particleSystem.rotation.x = Math.sin(time * 0.07) * 0.1;
+            dustParticles.rotation.y = time * 0.02;
+            dustParticles.rotation.x = time * 0.01;
+            
+            // Animate floating small shapes (orbiting)
+            shapesGroup.forEach((shape, idx) => {
+                const data = shape.userData;
+                if (data) {
+                    data.angle += data.angleSpeed;
+                    shape.position.x = Math.cos(data.angle) * data.radius;
+                    shape.position.z = Math.sin(data.angle) * data.radius;
+                    shape.rotation.x += 0.02;
+                    shape.rotation.y += 0.03;
+                } else {
+                    shape.rotation.x += 0.01;
+                    shape.rotation.z += 0.02;
+                }
+            });
+            
+            // Dynamic lighting movement
+            colorLight1.position.x = 2.5 + Math.sin(time * 0.7) * 1.2;
+            colorLight1.position.z = 3 + Math.cos(time * 0.5) * 1.5;
+            colorLight2.position.x = -2 + Math.sin(time * 0.9) * 1.3;
+            colorLight2.position.z = 4 + Math.cos(time * 0.6) * 1.2;
+            backLight.intensity = 0.5 + Math.sin(time * 0.8) * 0.2;
+            
+            // smooth camera follow mouse (subtle)
+            camera.position.x += (targetCameraX - camera.position.x) * 0.05;
+            camera.position.y += (targetCameraY - camera.position.y) * 0.05;
+            camera.lookAt(0, 0.5, 0);
+            
+            renderer.render(scene, camera);
+        }
+        
+        animate();
+        
+        // Handle window resize
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // Small extra: add floating glow effect with css but fine.
+        console.log('3D Scene Loaded — Rafiul Rupam Social Hub');
+    </script>
+</body>
+</html>
